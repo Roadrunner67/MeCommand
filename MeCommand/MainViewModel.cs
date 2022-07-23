@@ -1,115 +1,53 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using System.Threading.Tasks;
 
 namespace MeCommand
 {
-    internal class MainViewModel : ObservableObject
+    internal partial class MainViewModel : ObservableObject
     {
         private bool nameSwitch = false;
 
-        public MainViewModel()
-        {
-            Button1Command = new RelayCommand(DoButton1Command);
-            Button2Command = new RelayCommand(DoButton2Command, CanButton2Execute);
-            Button3Command = new RelayCommand<string>(DoButton3Command, CanButton3Execute);
 
-            AsyncButton4Command = new AsyncRelayCommand<string>(DoAsyncButton4Command, CanAsyncButton4Execute);
-        }
+        [ObservableProperty]
+        [AlsoNotifyCanExecuteFor(nameof(Button2Command))]
+        [AlsoNotifyCanExecuteFor(nameof(Button3Command))]
+        [AlsoNotifyCanExecuteFor(nameof(AsyncButton4Command))]
+        private string? _name1;
 
-        private string? _Name1;
-
-        /// <summary>
-        /// Gets or sets the Name
-        /// </summary>
-        public string? Name1
-        {
-            get => _Name1;
-            set
-            {
-                SetProperty(ref _Name1, value);
-                // Let the Button2 and Button3 know that we have a change in the Name property.
-                // The function CanButton2Execute will be executed and the result will effect the button IsEnable
-                Button2Command.NotifyCanExecuteChanged();
-                Button3Command.NotifyCanExecuteChanged();
-                AsyncButton4Command.NotifyCanExecuteChanged();
-            }
-        }
-
-        private string? _Name2;
-
-        /// <summary>
-        /// Gets or sets the Name
-        /// </summary>
-        public string? Name2
-        {
-            get => _Name2;
-            set
-            {
-                SetProperty(ref _Name2, value);
-            }
-        }
+        [ObservableProperty]
+        private string? _name2;
 
         #region Commands
 
         // Button1Command Just execute a function...
-        public IRelayCommand Button1Command { get; }
-
-        private void DoButton1Command()
+        [ICommand]
+        private void Button1()
         {
-            if (nameSwitch)
-            {
-                Name1 = "Uriah Heep";
-                nameSwitch = false;
-            }
-            else
-            {
-                Name1 = "Deep Purple";
-                nameSwitch = true;
-            }
+            Name1 = nameSwitch ? "Uriah Heep" : "Deep Purple";
+            nameSwitch = !nameSwitch;
         }
 
         // Button2Command
-        public IRelayCommand Button2Command { get; }
+        private bool CanButton2Execute() =>
+            !string.IsNullOrWhiteSpace(Name1);
+        
 
-        private bool CanButton2Execute()
+        [ICommand(CanExecute = nameof(CanButton2Execute))]
+        private void Button2()
         {
-            if (!string.IsNullOrWhiteSpace(Name1))
-                return true;
-            else
-                return false;
-        }
-
-        private void DoButton2Command()
-        {
-            if (nameSwitch)
-            {
-                Name1 = "Uriah Heep";
-                nameSwitch = false;
-            }
-            else
-            {
-                Name1 = "Deep Purple";
-                nameSwitch = true;
-            }
+            Name1 = nameSwitch ? "Uriah Heep" : "Deep Purple";
+            nameSwitch = !nameSwitch;
         }
 
         // Button3Command
-        public IRelayCommand Button3Command { get; }
+        private bool CanButton3Execute(string? obj) =>
+            !string.IsNullOrWhiteSpace(Name1);
 
-        private bool CanButton3Execute(string? obj)
-        {
-            if (!string.IsNullOrWhiteSpace(Name1))
-                return true;
-            else
-                return false;
-        }
 
-        private void DoButton3Command(string? name)
+        [ICommand(CanExecute = nameof(CanButton3Execute))]
+        private void Button3(string? name)
         {
             Name2 = name;
         }
@@ -119,17 +57,12 @@ namespace MeCommand
         #region Async Commands
 
         // AsyncButton4Command
-        public IAsyncRelayCommand AsyncButton4Command { get; }
+        private bool CanAsyncButton4Execute(string? obj) =>
+            !string.IsNullOrWhiteSpace(Name1);
 
-        private bool CanAsyncButton4Execute(string? obj)
-        {
-            if (!string.IsNullOrWhiteSpace(Name1))
-                return true;
-            else
-                return false;
-        }
 
-        private async Task<string> DoAsyncButton4Command(string? name)
+        [ICommand(CanExecute = nameof(CanAsyncButton4Execute))]
+        private async Task<string> AsyncButton4(string? name)
         {
             Task<string> task;
             if (string.IsNullOrEmpty(name))
